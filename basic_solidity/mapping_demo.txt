@@ -1,0 +1,64 @@
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.1;
+
+contract MappingDemo {
+    // datatype key value = hash map
+    // ถ้าเป็นภาษาอื่นต้องระบุค่าไว้ก่อน
+    // ไม่มีอ่าน key อ่าน value
+    // ไม่มี key ที่ตายตัว keyทุกตัวมีค่า defute
+    mapping(uint256 => bool) public a; //เมื่อใส่ key เข้าไป ค่าไม่ได้ถูกsetจะมีค่าเป็น false
+    mapping(address => bool) public b; //ค่าkeyทุกตัวมีค้่าเป็น false
+    // keyนอก address มีkeyในเป็น mapping
+    // address datatype uint
+    // mapping datatype bool
+    mapping(address => mapping(uint256 => bool)) public c;
+    uint256 private counter; //counter = 0
+
+    //คล้ายการใช้ array
+    //ต้องทำเอง
+    function setA(bool _value) public {
+        a[counter] = _value; //a[0]
+        counter++; //ใส่สมาชิกมาตามลำดับ
+    }
+
+    function setA(uint256 _index, bool _value) public {
+        a[_index] = _value;
+    }
+
+    function setB(bool _value) public {
+        b[msg.sender] = _value;
+    }
+
+    // mapping คล้าย array[][]
+    // การเข้าถึงค่า mapping
+    function setC(
+        address _addr,
+        uint256 _num,
+        bool _flag
+    ) public {
+        c[_addr][_num] = _flag;
+    }
+
+    // เคลียร์กลับไปเป็นdefute (boolean = false , int = 0)
+    function resetValueOfC(address _addr, uint256 _num) public {
+        delete c[_addr][_num];
+    }
+
+    function getAValues() public view returns (bool[] memory) {
+        bool[] memory values = new bool[](counter); // ได้ value
+        // วนลูปตาม counterหรือจำนวนที่นับ
+        for (uint256 i = 0; i < counter; i++) {
+            //0 ถึง counter
+            values[i] = a[i];
+        }
+        return values;
+    }
+
+    // ระบุ data locaction / storage locaction ถ้ามีการระบุ storageหรือmemoeyเป็นrefferrence
+    // mappingต้องระบุเป็น storage เท่านั้น
+    // function ต้องเป็น internal / private เท่านั้น เพราะ return นอกcontectไม่ได้ ต้องใช้ใน contect เดียวกัน
+    // ส่งไม่ได้รับไม่ได้ เเต่จัดการภายในได้
+    function getA() internal view returns (mapping(uint256 => bool) storage) {
+        return a;
+    }
+}

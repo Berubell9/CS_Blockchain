@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.1;
+
+contract EtherUnits {
+    // สามารถระบุหน่วยเงินได้
+    uint public oneWei  = 1 wei;
+    bool public isOneWei = oneWei == 1; //เช็ค
+    uint public oneEther = 1 ether;
+    bool public isOneEther = oneEther == 1e18; //1อีเทอร์ 10ยกกำลัง18
+}

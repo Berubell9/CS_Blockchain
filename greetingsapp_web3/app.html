@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <!--script src="web3.js"></script-->
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script>
+      const contract_address = "";
+      const abi = [
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_newMessage",
+              type: "string",
+            },
+          ],
+          name: "setMessage",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_initialMessage",
+              type: "string",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "_message",
+              type: "string",
+            },
+          ],
+          name: "SetMessage",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "message",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
+
+      window.addEventListener("load", async () => {
+        //connect directly without metamask
+        //var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        //accounts = await web3.eth.getAccounts();
+        //greetings = await new web3.eth.Contract(abi, contract_address);
+
+        //connect using metamask
+        if (typeof window.ethereum === "undefined") {
+          alert("Metamask is not installed, you cannot use this app");
+        } else {
+          web3 = new Web3(window.ethereum);
+          accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          greetings = await new web3.eth.Contract(abi, contract_address);
+          const event = greetings.events.SetMessage();
+          event.on("data", (event) => {
+            document.getElementById("message").innerHTML =
+              event.returnValues._message;
+          });
+        }
+      });
+
+      const setMessage = async () => {
+        accounts = await web3.eth.getAccounts();
+        message = document.getElementById("newMessage").value;
+        document.getElementById("status").innerHTML =
+          "Please wait for processing your request";
+        try {
+          const receipt = await greetings.methods
+            .setMessage(message)
+            .send({ from: accounts[0], gas: "3000000" });
+          document.getElementById("status").innerHTML = "your message is set";
+        } catch (error) {
+          document.getElementById("status").innerHTML = error;
+        }
+      };
+      const getMessage = async () => {
+        message = await greetings.methods.message().call();
+        document.getElementById("message").innerHTML = message;
+      };
+    </script>
+  </head>
+  <body>
+    <h2>Greeting App</h2>
+    <label>Enter Message</label>
+    <input type="text" id="newMessage" />
+    <button type="button" onclick="setMessage()">Set Message</button>
+    <button type="button" onclick="getMessage()">Get Message</button>
+    <hr />
+    <div id="status"></div>
+    <hr />
+    <div id="message"></div>
+    <br />
+  </body>
+</html>

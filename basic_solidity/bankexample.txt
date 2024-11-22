@@ -1,0 +1,64 @@
+//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.1;
+
+contract BankExample {
+    //เก็บเงินในเเต่ละ account
+    //      เจ้าของบช  จำนวนเงิน
+    mapping(address => uint) public balanceInAccount;
+
+    //return จำนวนเงินทั้งหมดที่มีในธนาคาร
+    function getBankBalance() public view returns(uint) {
+        return address(this).balance;
+    }
+
+    //โอนเงิน
+    function depositMoney() public payable {
+        //เพิ่มเงินจาผู้ส่งเข้าเจ้าของบช
+        balanceInAccount[msg.sender] += msg.value; //msg.valueตัวเเปล globle
+    }
+
+    //ถอนเงินทั้งหมดออกบช
+    function withdrawAllMoney() public {
+        //ต้องเคลียร์เงินกว่าก่อน transfer
+        //ถ้าสลับบรรทัดมีสิทธิ์เสียเงิน โดนโจมตี ไม่ปลอดภัย 
+        //ใช้gas เยอะกว่า21000 โอนไม่ได้ เเต่ป้องกันการถูกวนลูปโดย hacker ได้
+        //transfer ไม่สำเร็จจะถูกคืนเงิน
+        uint balanceToWithDraw = balanceInAccount[msg.sender]; //เอาเงินใส่ใน balanceToWithDraw
+        balanceInAccount[msg.sender] = 0; //ทำให้่บชนั้นเป็น 0
+        payable(msg.sender).transfer(balanceToWithDraw); //โอนเงินจาก balanceToWithDraw เข้าคนเรียกบช ต้องเป็น payable
+    }
+    
+    //enoughMoney(_amount) = modifier
+    function withdrawMoney(uint _amount) public enoughMoney(_amount) {
+        uint balanceBefore = balanceInAccount[msg.sender]; //ยอดเงินก่อนถอน
+        uint balanceContractBefore = getBankBalance(); // ยอดเงิรในธนาคารก่อนการถอน
+        balanceInAccount[msg.sender] -= _amount; // ลบยอดที่ถอนออก
+        payable(msg.sender).transfer(_amount); //ส่งเงินให้ตามจำนวน amount
+        //ต้องสำเร็จ 2 assert
+        //ถ้าไม่สำเร็จtransacction จะ revese ย้อนกลับ
+        //requir เป็น pre condition เพราะ ต้องเช็คว่าต้องมีเงินถึงจะถอน ,ได้ gas คืน
+        //assert เป็น post condition หลังจากทำไปเเล้วค่าที่ได้เป็นไปตามฟังก์ชั่น ,เกิดปัญหาใช้หมดไม่คืน gas ให้
+        assert(balanceInAccount[msg.sender] == (balanceBefore - _amount)); //สำเร็จ ยอดเงินก่อน - ยอดที่ถอน
+        assert(getBankBalance() == (balanceContractBefore - _amount)); //ยอดเงินต้องลบตามที่ถอน
+    }
+    
+    //โอนเงินทั้งหมด
+    function transferAllMoney(address payable _to) public {
+        uint balanceToTransfer = balanceInAccount[msg.sender];
+        balanceInAccount[msg.sender] = 0;
+        _to.transfer(balanceToTransfer);
+    }
+
+    //เหมือน withdrawMoney
+    function transferMoney(address payable _to, uint _amount) public enoughMoney(_amount) {
+        balanceInAccount[msg.sender] -= _amount;
+        _to.transfer(_amount);
+    }
+
+    //ต้องมีเงินมากกว่า amount ถึงจะถอนได้
+    modifier enoughMoney(uint _amount) {
+        require (balanceInAccount[msg.sender] >= _amount, "You do not have enough money in your account");
+        _;
+    }
+}

@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.1;
+contract BytesDemo {
+    // Array of byte
+    // ต้องใส่เลขฐาน 16
+    bytes public a;
+    function setA(bytes memory _data) public {
+        a = _data;
+    }
+    function addToA(bytes1 _data) public {
+        a.push(_data);
+    }
+    // add เข้าไปทีละ byte
+    function setAIndex(uint _index, bytes1 _data) public {
+        if (_index >= a.length) {
+            addToA(_data);      
+        }
+        else {
+            a[_index] = _data;
+        }
+    }
+    function getALength() public view returns (uint) {
+         return a.length;
+    } 
+    function concatA(bytes memory _data) public {
+         a = bytes.concat(a,bytes1 (0x20), _data);
+    }
+    // pass by value is pass storage to memory
+    function func1() view public returns (bytes memory) {
+        bytes memory temp = a; // a เป็น storage to memory
+        func2(temp); // ส่งพารามีเตอร์เข้าไป
+        return temp; 
+    }
+    // pass by refference is memory to memory
+    function func2(bytes memory _data) pure private {
+        _data[0] = 0xcd; // เปลี่ยน index เเรกหรือ byte เเรกเป็น 0xcd
+    }
+    // pass by refference is storage to storage
+    function func3 () public {
+        // เป็น storage อยู่เเล้วรับค่าเป็น memory ไม่ได้ (convert ไม่ได้)
+        bytes storage temp = a; // storage เก็บค่า a
+        temp[0] = 0xff;
+    }
+
+    // ขาเข้าเเปลง string เป็น byte
+    function setStringToA (string memory _data) public{
+        a = bytes (_data); // เเปลงเป็น byte เก็บใน a
+    }
+    // ขาออกเเปลง byte เป็น string
+    function getAAsString() public view returns (string memory){
+        return string (a);
+    }
+}

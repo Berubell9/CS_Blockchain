@@ -1,0 +1,238 @@
+<!-- https://docs.web3js.org/guides/web3_eth/eth -->
+
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script>
+        const contract_address = "0xD4D726BB431fB78d6cF96b1eCCa17A7e885E0681"
+        const abi =[
+	{
+		"inputs": [],
+		"name": "clearVote",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "candidate",
+				"type": "string"
+			}
+		],
+		"name": "voteForCandidate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "candidateCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "candidateList",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "getCandidate",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "candidate",
+				"type": "string"
+			}
+		],
+		"name": "totalVotesFor",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+
+        /* javascript */
+
+        // connect directly without metamask
+        window.addEventListener('load', async () => {
+            if (typeof (window.ethereum) === 'undefined') {
+                alert("Metamask is not installed, you cannot use this app")
+            }
+            else {
+                web3 = new Web3(window.ethereum);
+                accounts = await window.ethereum.request({ method: 'eth_requestAccounts', });
+                voting = await new web3.eth.Contract(abi, contract_address);
+                // const event = voting.events.SetMessage(); 
+                // event.on('data', (event) => {
+                //     document.getElementById("status").innerHTML = "Your vote is recorded";
+                // }); 
+            }
+        });
+
+        // Show contract address 
+        const showContract = async () => {
+            document.getElementById("address").innerHTML = contract_address;
+        }
+
+        // Vote for a candidate
+        const setVote = async () => {
+            candidate = document.getElementById("indexOfVote").value;
+            if(candidate == "0" || candidate == "1") {
+                document.getElementById("status").innerHTML = "Sending Vote";
+                try{
+                     const sending = await voting.methods
+                    .voteForCandidate(candidate)
+                    .send({from: accounts[0], gas: "3000000"});
+                    document.getElementById("status").innerHTML = "Your vote is recorded"
+                }
+                catch (error){
+                    document.getElementById("status").innerHTML = error;
+                }
+            }
+            else{
+                document.getElementById("status").innerHTML = "Your answer is not in the choice";
+            }
+        }
+
+        // Get total votes for a candidate
+        const getVote = async () => {
+            try {
+                votes1 = await voting.methods.totalVotesFor("0").call();
+                votes2 = await voting.methods.totalVotesFor("1").call();
+                document.getElementById("status").innerHTML = "Uncle Too = "+ votes1 + ", Tony = " + votes2;
+                
+                candidate = document.getElementById("indexOfVote").value;
+                votes = await voting.methods.totalVotesFor(candidate).call();
+                if (candidate == "0" ) {
+                    document.getElementById("status").innerHTML = "Uncle Too = "+votes;
+                }
+                else if(candidate == "1"){
+                    document.getElementById("status").innerHTML = "Tony Woodsome = "+votes;
+                } 
+                else{
+                document.getElementById("status").innerHTML = "Your answer is not in the choice";
+                }
+            }
+            catch (error) {
+                console.error(error);
+                document.getElementById("status").innerHTML = "Error: " + error.message;
+            }
+           
+        }
+
+        // Clear votes (Only manager)
+        const clearVote = async () => {
+            manager = accounts[0];
+            document.getElementById("status").innerHTML = "Clearing Vote";
+            try {
+                const clear = await voting.methods
+                .clearVote()
+                .send({from: manager, gas: "3000000"});
+                document.getElementById("status").innerHTML = "Votes cleared successfully";
+            } 
+            catch (error) {
+                console.error(error);
+                document.getElementById("status").innerHTML = "Error: " + error.message;
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="head">
+        <h1>Contract Address : <span id="address"></span></h1>
+        <button type="button" onclick="showContract()">Show Contract Address</button>
+        <h2>Voting For Candidate</h2>
+        <ol>
+            <li>Uncle Too</li>
+            <li>Tony Woodsome</li>
+        </ol>
+    </div>
+
+    <hr>
+
+    <div class="vote">
+        <h3>Your vote</h3>
+        <label>Enter number of the canditate</label>
+        <input type="text" id="indexOfVote" />
+        <button type="button" onclick="setVote()">Vote</button>
+    </div>
+
+    <hr>
+
+    <div class="results">
+        <h3>See Vote Results</h3>
+        <label>Enter number of the canditate</label>
+        <input type="text" id="numberOfVote" />
+        <button type="button" onclick="getVote()">Show Result</button>
+    </div>
+
+    <hr>
+
+    <div class="clear">
+        <h3>Clear Vote</h3>
+        <p>(Only manager)</p>
+        <button type="button" onclick="clearVote()">Clear Vote</button>
+    </div>
+
+    <hr>
+
+    <div id="status"></div>
+
+</body>
+
+</html>

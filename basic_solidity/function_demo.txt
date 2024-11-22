@@ -1,0 +1,95 @@
+//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.1;
+contract FunctionDemo {
+    // public = ใครเรียกใช้ก็ได้ ,ในหรือนอก contect ก็ใช้ได้
+    // private = เรียนใช้ได้เเค่ contect เดียวกันเท่านั้น คนอื่นเรียกใช้ไม่ได้
+    // internal = เฉพาะ contect เเละ sub contect same (protected)
+    // external = ฟังก์ที่เขียนขึ้นมาให้คนนอกใช่เท่านั้น ใน contect เดียวกันเรียกใช้yhไม่ได้ ,ประหยัด gas
+    
+    uint public a;
+    uint public value; //เก็บเงินในเเต่ละครั้งที่เข้า smart contect
+    // ไม่ต้องจัดการเงินที่เข้ามาใน smart contect เอง เพราะ network ดูเเลเงินให้
+    bytes public data;
+    function setA(uint _data) public {
+        a = _data;
+    }
+    function getA() public view returns (uint) {
+        return a;
+    }
+    // return เงินที่อยู่ใน smart contect
+    // หน่วยเงินเป็น wei
+    function getContactBalance() public view returns (uint) {
+        return address (this).balance;
+    }
+    function func1() public pure returns (uint b) {
+        b = 10;
+    } 
+    function func2() public {
+        a = a + 5;
+    }
+    function func3() public pure returns (uint) {
+        uint temp1 = 5;
+        uint temp2 = 6;
+        uint temp3 = func4(temp1, temp2);
+        //uint temp3 = func5(temp1, temp2);
+        //uint temp3 = func6(temp1, temp2);
+        return temp3;
+    } 
+    function func4(uint _para1, uint _para2) private pure returns (uint) {
+        return (_para1 + _para2);
+    }
+    function func5(uint _para1, uint _para2) internal pure returns (uint) {
+        return (_para1 + _para2);
+    } 
+    function func6(uint _para1, uint _para2) external pure returns (uint) {
+        return (_para1 + _para2);
+    }
+    function func7() public pure returns (uint, string memory) {
+        uint temp1;
+        string memory temp2;
+        (temp1, temp2) = func8();
+        return (temp1, temp2);
+    }
+    function func8() private pure returns (uint, string memory) {
+        return (1234, "Hello");
+    }
+    // payable ส่งเงินเข้า smart contect
+    function func9() public payable {
+        value = msg.value; // value เงินที่ส่งเข้ามา
+    }
+
+    /* เมื่อไม่เรียกฟังก์ชั่นในการโอน */
+    // receive() ต้องเป็น payable เเละexternal เท่านั้น
+    // ถ้ามีเงิน ไม่มี data เรียก receive
+    // กด transact
+    receive() payable external {
+        value = msg.value;
+    }
+    
+    // Fallback = ลูกค้าเรียกฟังกชั่นไรไม่รู้ ถ้าไม่มีฟังก์ชั่นนั้น จะเรียก Fallback เเทน
+    // ถ้ามีเงิน เเละมี data เรียก fallback
+    // กด transact
+    
+    // fallback รับเงินเเต่ไม่มี payable ทำให้ error
+    // fallback() external {
+    //    data = msg.data; 
+    // }
+
+    // ต้องมีฟังก์ชั่น recive ด้วย เเต่ไม่ได้เรียกใช้ฟังก์ชั่น จะเรียกใช้คำสั่งเเค่ใน fallback เท่านั้น
+    fallback() external payable {
+        data = msg.data;
+        value = msg.value;
+    }
+    /* modifier */
+    //ไม่ได้ถูกเรียกโดยตรงเเต่ถูกเรียกจากฟังก์ชี่นอีกฟังก์ชั่น
+    modifier aIsGreaterThan(uint _num) {
+        if (a > _num) {
+            _;
+        }//ถ้าไม่จริงจะไม่ทำตามฟังก์ชั่น10
+    }
+    //ก่อนจะเรียนฟังก์ชั่น10 ให้เรียกใช้ aIsGreaterThan ก่อน 
+    function func10(uint _num) public view aIsGreaterThan (_num) returns(string memory str) {
+        str = "Hello";
+    }      
+}
